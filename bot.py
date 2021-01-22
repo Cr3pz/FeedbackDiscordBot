@@ -11,6 +11,7 @@ from sys import argv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+CHANNEL = os.getenv('DISCORD_CHANNEL')
 
 bot=commands.Bot(command_prefix='~')
 bot.remove_command('help')
@@ -36,7 +37,7 @@ async def on_ready():
 
 @bot.event
 async def on_guild_join(guild):
-	channel = bot.get_channel(700553690200670248)
+	channel = bot.get_channel(CHANNEL)
 	await channel.send("Well, well, well. Looks like theres a new sheriff in town. Ya'll couldn't stay in line and gave the mods a hard time. So now I'm here to clean up feedback chat and I'm here to stay\n>.>\n<.<")
 
 @bot.command(name='help')
@@ -54,22 +55,22 @@ async def help(ctx, arg1=""):
 
 @bot.command(name='submit')
 @commands.has_role('feedback warrior')
-async def submit(ctx,a: int, *, content):
+async def submit(ctx,a, *, content):
 #spicy modular values because y not
-	channel = bot.get_channel(700553690200670248)
+	channel = bot.get_channel(CHANNEL)
 	role=get(ctx.author.guild.roles, name='feedback warrior')
 	message=ctx.message
 	member=ctx.author
 	link=str(content)
-	progress=a
+	progress=str(a)
 	await message.delete()
 
 #a lazy way of setting values to numbers cuz..... yea
-	if progress == 1:
+	if progress == '1':
 		prog="Work in Progress"
-	elif progress == 2:
+	elif progress == '2':
 		prog="Rough Draft"
-	elif progress == 3:
+	elif progress == '3':
 		prog="Finished Song"
 	else:
 		await channel.send("Please enter a valid number, it's 1-3")
@@ -78,14 +79,14 @@ async def submit(ctx,a: int, *, content):
 		await channel.send(f"Your submission has to be a link {ctx.author.mention}!")
 		return
 #the if statement just makes sure the 1st parameter is in the range accepted and isn't used as an overflow vuln
-	if progress<=3 and progress>=1:
+	if progress == '1' or progress == '2' or progress == '3':
 		await member.remove_roles(role)
 		await channel.send(f"artist:{ctx.author.mention} \nThis song is a {prog} \n{link}")
 
 
 @bot.event
 async def on_command_error(ctx, error):
-	channel = bot.get_channel(700553690200670248)
+	channel = bot.get_channel(CHANNEL)
 	message=ctx.message
 	if message.channel.type == "dm" and (str(message) == "~feedback" or str(message) == "~submit"):
 		await ctx.send("you can't run the commands from dm's. Go to the feedback channel")
@@ -93,8 +94,8 @@ async def on_command_error(ctx, error):
 #this one is a cool trick. basuically once you give a feedback that goes through, you get a role
 #and you can only submit your song for feedback if you have that role
 	if isinstance(error, commands.errors.MissingRole):
-		await channel.send(f'**you have to give feedback before you can submit** {ctx.message.author.mention} **>:c**')
 		await message.delete()
+		await channel.send(f'**you have to give feedback before you can submit** {ctx.message.author.mention} **>:c**')
 		return
 #if people don't fillout the command correctly it tells them to try again and points instructions
 	if isinstance(error, commands.errors.MissingRequiredArgument):
@@ -109,8 +110,8 @@ async def on_command_error(ctx, error):
 @bot.command(name='feedback')
 async def feedback(ctx, arg1, *, content):
 #just a bunch of values being stored to make the method more modular later on "totally not beacuse i'm lazy"
-	role=get(ctx.author.guild.roles, name='feedback role')
-	channel = bot.get_channel(700553690200670248)
+	role=get(ctx.author.guild.roles, name='feedback warrior')
+	channel = bot.get_channel(CHANNEL)
 	message=ctx.message
 	number=len(str(content))
 	userMention=str(arg1)
